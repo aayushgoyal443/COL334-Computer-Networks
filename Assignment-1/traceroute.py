@@ -2,6 +2,7 @@ import sys
 import time
 import socket
 import struct
+import matplotlib.pyplot as plt
 
 # Constants
 MAX_HOPS = 64
@@ -47,9 +48,14 @@ if (sock_formed == False):
 
 # Varying the ttl value to get the IP addresses hop by hop
 # We will ping the dest_addr using the socket formed above with varying ttl values
+
+x = []  # this will store the hop number
+y = []  # this will store the rtt value for that hop
+
 for ttl in range (1,MAX_HOPS+1):
 
     print(ttl, end = "    ")
+    x.append(ttl)
     try:
         my_socket.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)     # Updating the ttl value of socket
     except:
@@ -83,14 +89,29 @@ for ttl in range (1,MAX_HOPS+1):
             rtts.append("*")
 
     if (route_ip != ""):
-        print(route_ip, end = "   ")
+        print(route_ip, end = "\t")
 
+    least =0 
     for rtt in rtts:
         if rtt == "*":
             print("*", end = "  ")
         else:
             print('%.3f'%rtt + 'ms', end = "  ")
+            if (least ==0):
+                least  = rtt
+            else:
+                least = min(least, rtt)
+    y.append(least)
 
     print()
     if (route_ip == host_IP):
         break
+
+# Plot the graph using x and y
+
+plt.plot(x, y)
+plt.xlabel('Hop number')
+plt.ylabel('Round trip time (in ms)')
+plt.title('Hop number v/s rtt values')
+plt.savefig( "plots/" + str(dest_addr)+".png")
+plt.close("all")
