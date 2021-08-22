@@ -30,7 +30,7 @@ except:
 host_IP = socket.gethostbyname(dest_addr)   # getting the route IP address of domain name, just like nslookup
 
 # Forming a ICMP server socket, remember to give root permissions
-print('traceroute to ' + dest_addr + ' (' + str(host_IP) +  '), '+ str(MAX_HOPS) + ' hops max\n')
+print('\ntraceroute to ' + dest_addr + ' (' + str(host_IP) +  '), '+ str(MAX_HOPS) + ' hops max\n')
 sock_formed = False
 for t in range (RETRIES):
     try:
