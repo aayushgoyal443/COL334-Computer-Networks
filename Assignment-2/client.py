@@ -26,16 +26,16 @@ def disconnect():
 def handle_reg_feedback(feedback, sock):
     if (feedback[0] == "REGISTERED"):
         if (feedback[1]  =="TOSEND"):
-            print("Registered to send")
+            print("Server: Registered to SEND")
         elif (feedback[1] =="TORECV"):
-            print("Registered to recv")
+            print("Server: Registered to RECV")
         return True
     else:
         if (feedback[1] =="100"):
-            print("Malformed username")
+            print("Server: ERROR 100 Malformed username")
             sock.close()
         else:
-            print("Server:", "ERROR 101 No user registered")
+            print("Server: ERROR 101 No user registered")
         exit()
 
 def valid_msg_format(msg):
@@ -72,10 +72,10 @@ def handle_send_feedback(feedback):
     # We encountered some error 
     if (feedback[0] == "ERROR"):
         if (feedback[1] == "102"):
-            print("server: Recipient is not registered")
+            print("Server: ERROR 102 Unable to send")
             return True
         elif (feedback[1] == '103'):
-            print('server: Header incomplete')
+            print('Server: ERROR 103 Header incomplete')
             return False
 
 
@@ -121,7 +121,7 @@ def recv_messages():
         info = info.decode().split('\n')
         if (not is_well_formed(info)):
             fd = f"ERROR 103 Header Incomplete\n\n"
-            print("Incomplete header from server")
+            print("Raised ERROR 103: Header Incomplete")
             clientRECV.send(fd.encode())
             disconnect()
         else:
@@ -149,12 +149,11 @@ def main():
     #Opening the Receive socket
     clientRECV = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientRECV.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    print("\nTrying to connect RECV socket to ", host, "(", port, ")\n")
+    print("Trying to connect RECV socket to",  host +"#" + str(port))
     try:
         clientRECV.connect((host, port))
     except:
         print("Not able to connect to server...try again")
-    print(clientRECV)
     # Registering the RECV socket
     message = "REGISTER TORECV " + str(username) + "\n\n"
     clientRECV.send(message.encode())
@@ -165,7 +164,7 @@ def main():
     #Opening the send socket
     clientSEND = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientSEND.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    print("\nTrying to connect SEND socket to",  host +"#" + str(port))
+    print("Trying to connect SEND socket to",  host +"#" + str(port))
     try:
         clientSEND.connect((host, port))
     except:

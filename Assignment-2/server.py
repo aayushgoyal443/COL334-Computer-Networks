@@ -155,12 +155,10 @@ def handle_client_reg(conn, addr):
         registered_senders[username] = (conn, addr)
         feedback = 'REGISTERED TOSEND '+ str(username) + '\n\n'
     conn.send(feedback.encode())
-    print(f"{username} has registered in the server")
+    print(feedback.strip() + str("\n"))
 
     if (task[1] == "TOSEND"):
         serve_client(conn, addr, username)
-    else:
-        print("RECV thread closed")
 
 
 def main():
@@ -179,7 +177,7 @@ def main():
 
     while True:
         conn, addr = server.accept()
-        print("Received connection from ", addr[0], "(", addr[1], ")\n")
+        print(f"Received connection from {addr[0]}#{addr[1]}")
         # Now i think it is the time to chat with them on a separate thread
         t = threading.Thread(target= handle_client_reg , args= [conn, addr])
         t.start()
