@@ -14,23 +14,13 @@ registered_senders = {}
 registered_receivers = {}
 feedbacks = []      # for storing feedbacks from broadcast, since threading can call only non-void functions
 
+
+# change this to check for ERROR 103
 def content_length(msg):
     return len(msg)
 
-def disconnect_user_sender(username):
-    if (username in registered_senders):
-        registered_senders[username][0].close()
-        registered_senders.pop(username)
-        print(f"DE-REGISTERED TOSEND {username}")
 
-
-def disconnect_user_receiver(username):
-    if (username in registered_receivers):
-        registered_receivers[username][0].close()
-        registered_receivers.pop(username)
-        print(f"DE-REGISTERED TORECV {username}")
-
-
+# To check if initial SEND and RECV registration is done or not
 def is_registered(username):
     if username not in registered_receivers:
         return False
@@ -52,6 +42,44 @@ def valid_username(username):
             return False
     return True
 
+
+# incase of server to client ERROR 103
+def disconnect_user_sender(username):
+    if (username in registered_senders):
+        registered_senders[username][0].close()
+        registered_senders.pop(username)
+        print(f"DE-REGISTERED TOSEND {username}")
+
+
+# incase of client to server ERROR 103
+def disconnect_user_receiver(username):
+    if (username in registered_receivers):
+        registered_receivers[username][0].close()
+        registered_receivers.pop(username)
+        print(f"DE-REGISTERED TORECV {username}")
+
+
+# returns False if ERROR 103 is present
+def check_error_103(info):
+    # check if ERROR 103 needs to be raised or not
+    invalid = False
+    if (len(info)!= 4):
+        invalid = True
+    elif (info[2] != ''):
+        invalid = True
+    else:
+        header_info  = info[1].split(': ')
+        if (len(header_info) != 2):
+            invalid = True
+        elif (header_info[0]!= "Content-length"):
+            invalid = True
+        elif ( len(info[3]) != int(header_info[1])):
+            invalid = True
+
+    return (not invalid)
+
+
+# To serve the @ALL recipient
 def broadcast(sender, msg):
     global feedbacks
     feedbacks = []
@@ -74,6 +102,7 @@ def broadcast(sender, msg):
     return "SENT ALL"
     
 
+# To send to particular client
 def unicast(recipient, sender, msg, idx =-1):
     if (recipient not in registered_receivers):
         feedback = "ERROR 102 Unable to send\n\n"
@@ -94,30 +123,12 @@ def unicast(recipient, sender, msg, idx =-1):
     return fd
 
 
-def is_well_formed(info):
-    # check if ERROR 103 needs to be raised or not
-    invalid = False
-    if (len(info)!= 4):
-        invalid = True
-    elif (info[2] != ''):
-        invalid = True
-    else:
-        header_info  = info[1].split(': ')
-        if (len(header_info) != 2):
-            invalid = True
-        elif (header_info[0]!= "Content-length"):
-            invalid = True
-        elif ( len(info[3]) != int(header_info[1])):
-            invalid = True
-
-    return (not invalid)
-
-
+# Active on the thread which received TOSEND
 def serve_client(conn, addr, username):
     while (username in  registered_senders):
         message= conn.recv(MAX_MESSAGE_SIZE)
         info = message.decode().split('\n')
-        if not is_well_formed(info):
+        if not check_error_103(info):
             feedback = f"ERROR 103 Header incomplete\n\n"
             conn.send(feedback.encode())
             disconnect_user_sender(username)
@@ -135,6 +146,8 @@ def serve_client(conn, addr, username):
         
         conn.send(feedback.encode())
 
+
+# handle the client SEND and RECV registration
 def handle_client_reg(conn, addr):
     message = conn.recv(MAX_MESSAGE_SIZE)
     task = message.decode().split()
