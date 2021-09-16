@@ -1,0 +1,45 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin =1.25in,includefoot]{geometry}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+
+\title{Assignment 2 - COL334}
+\author{Aayush Goyal}
+\date{September 2021}
+
+\begin{document}
+
+\maketitle
+
+\section{Design Decisions}
+
+\begin{enumerate}
+    \item Both sending and receiving is handled separately. If the client sends a Malformed packet then server throws the ERROR 103 disconnects the TOSEND socket of client. But even after this it can receive messages from other clients (either unicast or broadcast)\\
+    If the client detects that the packet is malformed then it raises ERROR 103 and it will no longer accept messages from the server. But it can still send messages to other clients (unicast or broadcast).
+    
+    \item If the recipient detects Malformed packet then it sends ERROR 103 to server and the server sends ERROR 102 to original sender
+    
+    \item In case of ERROR 101 and 100, the error is reported to client and program quits. Client will to start the process again by giving the appropriate command line argument.
+    
+\end{enumerate}
+
+\section{How to run the code}
+\begin{enumerate}
+    \item \textbf{For server:}
+    \begin{lstlisting}[language=bash]
+      $ python server.py
+    \end{lstlisting}
+    \item \textbf{For client:}
+    \begin{lstlisting}[language=bash]
+      $ python client.py <username> <server_address>
+    \end{lstlisting}
+    Here username is a valid username the client wants to keep.\\
+    Server address is the address of server. Currently it will be 127.0.1.1\\
+    Port Number of server is kept 1234
+\end{enumerate}
+
+
+\end{document}
