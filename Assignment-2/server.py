@@ -90,10 +90,10 @@ def broadcast(sender, msg):
             continue
         feedbacks.append("")
         t = threading.Thread(target= unicast, args = [recipient, sender,  msg, i])
-        t.start()
         ts.append(t)
         i+=1
-
+    for t in ts:
+        t.start()
     for t in ts:
         t.join()
     for fd in feedbacks: 
