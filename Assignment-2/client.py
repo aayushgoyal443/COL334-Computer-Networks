@@ -132,7 +132,7 @@ def recv_messages():
             return
         else:
             sender = info[0].split()[1]
-            fd = f"RECEIVED {info}\n\n"
+            fd = f"RECEIVED {sender}\n\n"
             clientRECV.send(fd.encode())
             print(f"{sender}: {info[3]}")
 

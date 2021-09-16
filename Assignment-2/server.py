@@ -99,7 +99,7 @@ def broadcast(sender, msg):
     for fd in feedbacks: 
         if (fd == "ERROR 102 Unable to send\n\n"):
             return fd
-    return "SENT ALL"
+    return "SENT ALL\n\n"
     
 
 # To send to particular client
@@ -117,7 +117,7 @@ def unicast(recipient, sender, msg, idx =-1):
         fd = "ERROR 102 Unable to send\n\n"
     else: 
         # it would have got the "RECEIVED"
-        fd = "SENT {recipient}\n\n"
+        fd = f"SENT {recipient}\n\n"
     if (idx!=-1):
         feedbacks[idx] = fd
     return fd
@@ -140,9 +140,9 @@ def serve_client(conn, addr, username):
             feedback = unicast(recipient,username, info[3])
         feedback= feedback.split()
         if (feedback[0] == 'SENT'):
-            feedback  = f"SENT {recipient}"
+            feedback  = f"SENT {recipient}\n\n"
         else:
-            feedback = f"ERROR 102 Unable to send"
+            feedback = f"ERROR 102 Unable to send\n\n"
         
         conn.send(feedback.encode())
 
@@ -188,7 +188,7 @@ def main():
     ip = socket.gethostbyname(host)     # this is the IP address of our Server, client must pass this as server address in order to connect
     port = SERVER_PORT     # this should be free
     server.bind((host, port))
-    print(host, "(", ip, ")")
+    print(f"{host}, ( {ip}#{port} )")
     server.listen(MAX_CLIENTS)
 
     print("\nWaiting for incoming connections...\n")
