@@ -35,7 +35,7 @@ def handle_reg_feedback(feedback, sock):
             print("Malformed username")
             sock.close()
         else:
-            print("Server:", "No user registered")
+            print("Server:", "ERROR 101 No user registered")
         exit()
 
 def valid_msg_format(msg):
@@ -156,7 +156,7 @@ def main():
         print("Not able to connect to server...try again")
     print(clientRECV)
     # Registering the RECV socket
-    message = "REGISTER TORECV " + str(username) + "\n\n"
+    message = "RREGISTER TORECV " + str(username) + "\n\n"
     clientRECV.send(message.encode())
     feedback = clientRECV.recv(MAX_MESSAGE_SIZE)
     feedback = feedback.decode().split()
