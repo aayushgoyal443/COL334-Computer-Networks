@@ -156,7 +156,7 @@ def main():
         print("Not able to connect to server...try again")
     print(clientRECV)
     # Registering the RECV socket
-    message = "RREGISTER TORECV " + str(username) + "\n\n"
+    message = "REGISTER TORECV " + str(username) + "\n\n"
     clientRECV.send(message.encode())
     feedback = clientRECV.recv(MAX_MESSAGE_SIZE)
     feedback = feedback.decode().split()
