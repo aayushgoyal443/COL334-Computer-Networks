@@ -16,13 +16,6 @@ def content_length(msg):
     return len(msg)
 
 
-def disconnect():
-    clientRECV.close()
-    clientSEND.close()
-    global connected
-    connected = False
-
-
 def handle_reg_feedback(feedback, sock):
     if (feedback[0] == "REGISTERED"):
         if (feedback[1]  =="TOSEND"):
@@ -75,7 +68,8 @@ def handle_send_feedback(feedback):
             print("Server: ERROR 102 Unable to send")
             return True
         elif (feedback[1] == '103'):
-            print('Server: ERROR 103 Header incomplete')
+            print('Server: ERROR 103 Header incomplete\n')
+            print('chat app: sending disconnected, only receiving messages now\n')
             return False
 
 
@@ -94,7 +88,8 @@ def send_messages():
         feedback = feedback.decode().split()
         keep_running = handle_send_feedback(feedback)
         if (not keep_running):
-            disconnect()
+            clientSEND.close()
+            return
 
 
 def is_well_formed(info):
@@ -121,15 +116,16 @@ def recv_messages():
         info = info.decode().split('\n')
         if (not is_well_formed(info)):
             fd = f"ERROR 103 Header Incomplete\n\n"
-            print("Raised ERROR 103: Header Incomplete")
+            print("Raised ERROR 103: Header Incomplete\n")
+            print("receiving disconnected, only sending messages now\n")
             clientRECV.send(fd.encode())
-            disconnect()
+            clientRECV.close()
+            return
         else:
             sender = info[0].split()[1]
             fd = f"RECEIVED {info}\n\n"
             clientRECV.send(fd.encode())
             print(f"{sender}: {info[3]}")
-
 
 def main():
 
@@ -188,10 +184,12 @@ def main():
     threadSEND.start()
     threadRECV.start()
 
-    if (threadSEND.is_alive()):
-        threadSEND.join()
     if (threadRECV.is_alive()):
         threadRECV.join()
+    if (threadSEND.is_alive()):
+        threadSEND.join()
+    clientRECV.close()
+    clientSEND.close()
 
 
 if __name__ == "__main__":

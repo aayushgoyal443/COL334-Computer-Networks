@@ -17,13 +17,18 @@ feedbacks = []      # for storing feedbacks from broadcast, since threading can 
 def content_length(msg):
     return len(msg)
 
-def disconnect_user(username):
+def disconnect_user_sender(username):
     if (username in registered_senders):
         registered_senders[username][0].close()
         registered_senders.pop(username)
+        print(f"DE-REGISTERED TOSEND {username}")
+
+
+def disconnect_user_receiver(username):
     if (username in registered_receivers):
         registered_receivers[username][0].close()
         registered_receivers.pop(username)
+        print(f"DE-REGISTERED TORECV {username}")
 
 
 def is_registered(username):
@@ -79,7 +84,7 @@ def unicast(recipient, sender, msg, idx =-1):
     feedback = registered_receivers[recipient][0].recv(MAX_MESSAGE_SIZE)
     feedback = feedback.decode().split()
     if (feedback[0] == "ERROR" and feedback[1] == "103"):
-        disconnect_user(recipient)
+        disconnect_user_receiver(recipient)
         fd = "ERROR 102 Unable to send\n\n"
     else: 
         # it would have got the "RECEIVED"
@@ -109,13 +114,13 @@ def is_well_formed(info):
 
 
 def serve_client(conn, addr, username):
-    while is_registered(username):
+    while (username in  registered_senders):
         message= conn.recv(MAX_MESSAGE_SIZE)
         info = message.decode().split('\n')
         if not is_well_formed(info):
             feedback = f"ERROR 103 Header incomplete\n\n"
             conn.send(feedback.encode())
-            disconnect_user(username)
+            disconnect_user_sender(username)
             continue
         recipient = info[0].split()[1]
         if (recipient == "ALL"):
