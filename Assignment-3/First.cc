@@ -22,6 +22,7 @@
 #include "ns3/applications-module.h"
 
 using namespace ns3;
+using namespace std;
 
 #define DATA_RATE "8Mbps"
 #define DELAY "3ms"
@@ -31,6 +32,7 @@ using namespace ns3;
 #define NUM_PACKETS INT32_MAX
 #define START_TIME 1
 #define END_TIME 30
+string protocol = "NewReno";
 
 NS_LOG_COMPONENT_DEFINE ("SixthScriptExample");
 
@@ -201,9 +203,36 @@ RxDrop (Ptr<PcapFileWrapper> file, Ptr<const Packet> p)
 int
 main (int argc, char *argv[])
 {
-  CommandLine cmd;
-  cmd.Parse (argc, argv);
-  
+	if (argc!=2){
+		cout <<"Provide 'a','b','c','d' as arguments to run different protcols\n";
+		return -1;
+	}
+	string part_num = argv[1];
+	if (part_num =="a"){
+		// Newreno
+		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewReno"));
+		protocol =  "NewReno";
+	}
+	else if (part_num == "b"){
+		// Highspeed
+		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpHighSpeed"));
+		protocol =  "HighSpeed";
+	}
+	else if (part_num =="c"){
+		// Veno
+		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpVeno"));
+		protocol =  "Veno";
+	}
+	else if (part_num =="d"){
+		// Vegas
+		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpVegas"));
+		protocol =  "Vegas";
+	}
+	else{
+		cout <<"Invlaid part number\n";
+		return -1;
+	}
+
   NodeContainer nodes;
   nodes.Create (2);
 
@@ -241,7 +270,7 @@ main (int argc, char *argv[])
   app->SetStopTime (Seconds (END_TIME));
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("sixth.cwnd");
+  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("first_"+protocol+".cwnd");
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream));
 
   PcapHelper pcapHelper;
