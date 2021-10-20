@@ -23,6 +23,15 @@
 
 using namespace ns3;
 
+#define DATA_RATE "8Mbps"
+#define DELAY "3ms"
+#define APPLICATION_DATA_RATE "1Mbps"
+#define ERROR 0.00001
+#define PACKET_SIZE 3000
+#define NUM_PACKETS INT32_MAX
+#define START_TIME 1
+#define END_TIME 30
+
 NS_LOG_COMPONENT_DEFINE ("SixthScriptExample");
 
 // ===========================================================================
@@ -199,14 +208,14 @@ main (int argc, char *argv[])
   nodes.Create (2);
 
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue (DATA_RATE));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue (DELAY));
 
   NetDeviceContainer devices;
   devices = pointToPoint.Install (nodes);
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  em->SetAttribute ("ErrorRate", DoubleValue (0.00001));
+  em->SetAttribute ("ErrorRate", DoubleValue (ERROR));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
@@ -221,15 +230,15 @@ main (int argc, char *argv[])
   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
   ApplicationContainer sinkApps = packetSinkHelper.Install (nodes.Get (1));
   sinkApps.Start (Seconds (0.));
-  sinkApps.Stop (Seconds (20.));
+  sinkApps.Stop (Seconds (END_TIME));
 
   Ptr<Socket> ns3TcpSocket = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
 
   Ptr<MyApp> app = CreateObject<MyApp> ();
-  app->Setup (ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps"));
+  app->Setup (ns3TcpSocket, sinkAddress, PACKET_SIZE, NUM_PACKETS, DataRate (APPLICATION_DATA_RATE));
   nodes.Get (0)->AddApplication (app);
-  app->SetStartTime (Seconds (1.));
-  app->SetStopTime (Seconds (20.));
+  app->SetStartTime (Seconds (START_TIME));
+  app->SetStopTime (Seconds (END_TIME));
 
   AsciiTraceHelper asciiTraceHelper;
   Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("sixth.cwnd");
@@ -239,7 +248,7 @@ main (int argc, char *argv[])
   Ptr<PcapFileWrapper> file = pcapHelper.CreateFile ("sixth.pcap", std::ios::out, PcapHelper::DLT_PPP);
   devices.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeBoundCallback (&RxDrop, file));
 
-  Simulator::Stop (Seconds (20));
+  Simulator::Stop (Seconds (END_TIME));
   Simulator::Run ();
   Simulator::Destroy ();
 
