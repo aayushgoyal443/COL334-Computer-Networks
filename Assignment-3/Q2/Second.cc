@@ -30,8 +30,10 @@ using namespace std;
 #define NUM_PACKETS INT32_MAX
 #define START_TIME 1
 #define END_TIME 30
-int DATA_RATE= "6Mbps";
-int APPLICATION_DATA_RATE= "2Mbps";
+string APPLICATION_DATA_RATE= "2Mbps";
+string DATA_RATE= "6Mbps";
+
+int packets_dropped=0;
 
 NS_LOG_COMPONENT_DEFINE ("SixthScriptExample");
 
@@ -197,40 +199,40 @@ RxDrop (Ptr<PcapFileWrapper> file, Ptr<const Packet> p)
 {
   NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
   file->Write (Simulator::Now (), p);
+  packets_dropped++;
+}
+
+void 
+write_packets_dropped(string part_num, string value)
+{
+  ofstream myfile;
+  myfile.open ( part_num+"_"+ value +"_dropped.txt");
+  myfile << value <<"\n";
+  myfile << packets_dropped <<"\n";
+  myfile.close();
 }
 
 int
 main (int argc, char *argv[])
 {
-	if (argc!=2){
-		cout <<"Provide 'a','b','c','d' as arguments to run different protcols\n";
+	if (argc!=3){
+		cout <<"Provide 'a','b' for part number\nThen provide the respective data rate values\n";
 		return -1;
 	}
-	string part_num = argv[1];
-	if (part_num =="a"){
-		// Newreno
-		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewReno"));
-		protocol =  "NewReno";
-	}
-	else if (part_num == "b"){
-		// Highspeed
-		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpHighSpeed"));
-		protocol =  "HighSpeed";
-	}
-	else if (part_num =="c"){
-		// Veno
-		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpVeno"));
-		protocol =  "Veno";
-	}
-	else if (part_num =="d"){
-		// Vegas
-		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpVegas"));
-		protocol =  "Vegas";
-	}
-	else{
-		cout <<"Invlaid part number\n";
-		return -1;
-	}
+  string part_num = argv[1];
+  string value = argv[2];
+
+  if (part_num == "a"){
+    DATA_RATE = value;  
+  } 
+  else if (part_num =="b"){
+    APPLICATION_DATA_RATE = value;
+  }
+  else{
+    cout <<"Wrong part number given\n";
+    return -1;
+  }
+	
 
   NodeContainer nodes;
   nodes.Create (2);
@@ -269,7 +271,7 @@ main (int argc, char *argv[])
   app->SetStopTime (Seconds (END_TIME));
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("first_"+protocol+".cwnd");
+  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("second_"+part_num+"_"+value+".cwnd");
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream));
 
   PcapHelper pcapHelper;
@@ -279,6 +281,8 @@ main (int argc, char *argv[])
   Simulator::Stop (Seconds (END_TIME));
   Simulator::Run ();
   Simulator::Destroy ();
+
+  write_packets_dropped(part_num, value);
 
   return 0;
 }
