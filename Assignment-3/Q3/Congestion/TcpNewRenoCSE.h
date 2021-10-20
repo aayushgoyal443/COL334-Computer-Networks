@@ -177,7 +177,7 @@ public:
  *
  * \see IncreaseWindow
  */
-class TcpNewReno : public TcpCongestionOps
+class TcpNewRenoCSE : public TcpCongestionOps
 {
 public:
   /**
@@ -186,15 +186,15 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  TcpNewReno ();
+  TcpNewRenoCSE ();
 
   /**
    * \brief Copy constructor.
    * \param sock object to copy.
    */
-  TcpNewReno (const TcpNewReno& sock);
+  TcpNewRenoCSE (const TcpNewRenoCSE& sock);
 
-  ~TcpNewReno ();
+  ~TcpNewRenoCSE ();
 
   std::string GetName () const;
 
