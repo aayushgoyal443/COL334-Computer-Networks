@@ -33,6 +33,7 @@ using namespace std;
 #define START_TIME 1
 #define END_TIME 30
 string protocol = "NewReno";
+int packets_dropped=0;
 
 NS_LOG_COMPONENT_DEFINE ("SixthScriptExample");
 
@@ -198,7 +199,20 @@ RxDrop (Ptr<PcapFileWrapper> file, Ptr<const Packet> p)
 {
   NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
   file->Write (Simulator::Now (), p);
+  packets_dropped++;
 }
+
+
+void 
+write_packets_dropped()
+{
+  ofstream myfile;
+  myfile.open ( protocol+"_dropped.txt");
+  myfile << protocol <<"\n";
+  myfile << packets_dropped <<"\n";
+  myfile.close();
+}
+
 
 int
 main (int argc, char *argv[])
@@ -280,6 +294,8 @@ main (int argc, char *argv[])
   Simulator::Stop (Seconds (END_TIME));
   Simulator::Run ();
   Simulator::Destroy ();
+
+  write_packets_dropped();
 
   return 0;
 }
