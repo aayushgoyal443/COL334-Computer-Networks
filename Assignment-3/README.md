@@ -38,3 +38,23 @@ Here <part_num> is:
 \<value> has been varied in the list 2Mbps, 4Mbps, 10 Mbps, 20Mbps, 50 Mbps 
 * b: Here we are varying the Application Data Rate. Data rate is fixed as 6Mbps.  
 \<value> has been varied in the list 0.5 Mbps, 1Mbps, 2Mbps, 4Mbps, 10 Mbps
+
+
+## Part 3
+
+1. Now change the code inside `ns-3.29/examples/tutorial/sixth.cc` from the `Third.cc` file submitted.
+2. Next put the `tcp-newrenocse.cc` and `tcp-newrenocse.h` file in the `ns-3.29/src/internet/model`
+3. Now make the following changes in the `ns-3.29/src/internet/wscript`. Now add "model/tcp-newrenocse.h" in headers.source. Also add "model/tcp-newrenocse.cc" in obj.source.
+4. Compile the newly added protocol using
+```sh
+./waf
+```
+5. Next run the command
+```sh 
+./waf configure --enable-example
+```
+6. Now to run the code, give the following command
+```sh
+./waf --run "examples/tutorial/sixth <config_num>"
+```
+Here config number is 1, 2 and 3

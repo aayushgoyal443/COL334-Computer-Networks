@@ -250,12 +250,12 @@ main (int argc, char *argv[])
   NodeContainer nodes;
   nodes.Create (2);
 
-  PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue (DATA_RATE));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue (DELAY));
+  PointToPointHelper pointToPoint1;
+  pointToPoint1.SetDeviceAttribute ("DataRate", StringValue (DATA_RATE));
+  pointToPoint1.SetChannelAttribute ("Delay", StringValue (DELAY));
 
   NetDeviceContainer devices;
-  devices = pointToPoint.Install (nodes);
+  devices = pointToPoint1.Install (nodes);
 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
   em->SetAttribute ("ErrorRate", DoubleValue (ERROR));
