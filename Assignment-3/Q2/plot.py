@@ -19,8 +19,12 @@ plt.plot(time, size)
 plt.xlabel("Time (in s)")
 plt.ylabel("Congestion window size")
 
-FILE_NAME = FILE_NAME.strip(".cwnd").split('/')[-1].split('_')[-1]
+FILE_NAME = FILE_NAME.strip(".cwnd").split('/')[-1].split('_')
+
+if (FILE_NAME[1] =='a'):
+    FILE_NAME = f"DataRate_{FILE_NAME[-1]}"
+else:
+    FILE_NAME = f"ApplicationDataRate_{FILE_NAME[-1]}"
 
 plt.title(FILE_NAME)
-
-plt.savefig(f"plots/{FILE_NAME}")
+plt.savefig(f"plots/{FILE_NAME}.png")
