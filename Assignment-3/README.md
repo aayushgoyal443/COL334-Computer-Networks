@@ -58,3 +58,15 @@ Here <part_num> is:
 ./waf --run "examples/tutorial/sixth <config_num>"
 ```
 Here config number is 1, 2 and 3
+
+
+## Plotting script
+
+To run:
+```python
+python plot.py <ques_num>
+```
+Here \<ques_num> can be 1, 2, 3  
+The input files should be present in `Q{<ques_num>}/outputs/toplot` folder  
+The output files will be in `Q{<ques_num>}/outputs/plots` folder   
+Please make sure that plots folder is already present, else it will throw an error
