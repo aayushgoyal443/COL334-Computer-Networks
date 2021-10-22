@@ -206,7 +206,9 @@ void
 write_packets_dropped(string part_num, string value)
 {
   ofstream myfile;
-  myfile.open ( part_num+"_"+ value +"_dropped.txt");
+  string part_name = "DataRate";
+  if (part_num == "b") part_name = "Application" + part_name
+  myfile.open ( part_name+"_"+ value +"_dropped.txt");
   myfile << value <<"\n";
   myfile << packets_dropped <<"\n";
   myfile.close();
@@ -271,7 +273,9 @@ main (int argc, char *argv[])
   app->SetStopTime (Seconds (END_TIME));
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("second_"+part_num+"_"+value+".cwnd");
+  string part_name = "DataRate";
+  if (part_num == "b") part_name = "Application" + part_name
+  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream (part_name+"_"+value+".cwnd");
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream));
 
   PcapHelper pcapHelper;

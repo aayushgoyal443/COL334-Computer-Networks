@@ -242,6 +242,11 @@ main (int argc, char *argv[])
 		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpVegas"));
 		protocol =  "Vegas";
 	}
+  else if (part_num =="e"){
+		// NewRenoCSE
+		Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewRenoCSE"));
+		protocol =  "Vegas";
+	}
 	else{
 		cout <<"Invlaid part number\n";
 		return -1;
@@ -284,7 +289,7 @@ main (int argc, char *argv[])
   app->SetStopTime (Seconds (END_TIME));
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("first_"+protocol+".cwnd");
+  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream (protocol+".cwnd");
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream));
 
   PcapHelper pcapHelper;
