@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np 
 import sys
-import os
 from os import listdir
 from os.path import isfile, join
 ques = int(sys.argv[1])
@@ -19,14 +18,10 @@ for FILE_NAME in onlyfiles:
         time.append(t[0])
         size.append(int(t[1]))
 
-    time = np.array(time)
-    size = np.array(size)
-
     plt.plot(time, size)
     plt.xlabel("Time (in s)")
     plt.ylabel("Congestion window size")
     FILE_NAME = FILE_NAME.strip(".cwnd").split('/')[-1]
-
     plt.title(FILE_NAME)
     plt.savefig(f"{output_dir}{FILE_NAME}.png")
     plt.close()

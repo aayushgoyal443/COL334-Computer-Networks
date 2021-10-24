@@ -10,6 +10,8 @@ using namespace std;
 
 int packets_dropped=0;
 
+#define ERROR 0.00001
+
 NS_LOG_COMPONENT_DEFINE ("AayushScriptExample");
 
 // ===========================================================================
@@ -178,11 +180,11 @@ RxDrop (Ptr<PcapFileWrapper> file, Ptr<const Packet> p)
 }
 
 void 
-write_packets_dropped(string part_num, string value)
+write_packets_dropped(string part_num)
 {
   ofstream myfile;
-  myfile.open ( part_num+"_"+ value +"_dropped.txt");
-  myfile << value <<"\n";
+  myfile.open ( part_num+"_dropped.txt");
+  myfile << part_num <<"\n";
   myfile << packets_dropped <<"\n";
   myfile.close();
 }
@@ -190,10 +192,8 @@ write_packets_dropped(string part_num, string value)
 int
 main (int argc, char *argv[])
 {
-  // TODO: make the command line args
-
-  CommandLine cmd;
-  cmd.Parse(argc,argv);
+  string part_num = "";
+  part_num = argv[1];
 
   NodeContainer nodes;
   nodes.Create (3);
@@ -212,6 +212,14 @@ main (int argc, char *argv[])
   NetDeviceContainer devices2;
   devices2 = pointToPoint2.Install (nodes.Get(1), nodes.Get(2));
 
+  Ptr<RateErrorModel> em1 = CreateObject<RateErrorModel> ();
+  em1->SetAttribute ("ErrorRate", DoubleValue (ERROR));
+  devices1.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em1));
+
+  Ptr<RateErrorModel> em2 = CreateObject<RateErrorModel> ();
+  em2->SetAttribute ("ErrorRate", DoubleValue (ERROR));
+  devices2.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em2));
+
   InternetStackHelper stack;
   stack.Install (nodes);
 
@@ -223,63 +231,100 @@ main (int argc, char *argv[])
   address2.SetBase ("10.1.2.0", "255.255.255.252");
   Ipv4InterfaceContainer interfaces2 = address2.Assign (devices2);
 
+  int END_TIME = 30;
   uint16_t sinkPort1 = 8080;
   Address sinkAddress1 (InetSocketAddress (interfaces1.GetAddress (1), sinkPort1));
   PacketSinkHelper packetSinkHelper1 ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort1));
-  ApplicationContainer sinkApps1 = packetSinkHelper1.Install (nodes.Get (1));
+  ApplicationContainer sinkApps1 = packetSinkHelper1.Install (nodes.Get (2));
   sinkApps1.Start (Seconds (0.));
   sinkApps1.Stop (Seconds (END_TIME));
 
   uint16_t sinkPort2 = 8081;
-  Address sinkAddress2 (InetSocketAddress (interfaces2.GetAddress (1), sinkPort2));
+  Address sinkAddress2 (InetSocketAddress (interfaces1.GetAddress (1), sinkPort2));
   PacketSinkHelper packetSinkHelper2 ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort2));
-  ApplicationContainer sinkApps2 = packetSinkHelper2.Install (nodes.Get (1));
+  ApplicationContainer sinkApps2 = packetSinkHelper2.Install (nodes.Get (2));
   sinkApps2.Start (Seconds (0.));
   sinkApps2.Stop (Seconds (END_TIME));
 
-  Ptr<Socket> ns3TcpSocket1 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
-  Ptr<Socket> ns3TcpSocket2 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
-  Ptr<Socket> ns3TcpSocket3 = Socket::CreateSocket (nodes.Get (1), TcpSocketFactory::GetTypeId ());
+  uint16_t sinkPort3 = 8082;
+  Address sinkAddress3 (InetSocketAddress (interfaces2.GetAddress (1), sinkPort3));
+  PacketSinkHelper packetSinkHelper3 ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort3));
+  ApplicationContainer sinkApps3 = packetSinkHelper3.Install (nodes.Get (2));
+  sinkApps3.Start (Seconds (0.));
+  sinkApps3.Stop (Seconds (END_TIME));
+
+  Ptr<Socket> ns3TcpSocket1, ns3TcpSocket2, ns3TcpSocket3;
+  if (part_num =="1"){
+    TypeId tid = TypeId::LookupByName ("ns3::TcpNewReno");
+    Config::Set ("/NodeList/*/$ns3::TcpL4Protocol/SocketType", TypeIdValue (tid));
+    ns3TcpSocket1 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
+    ns3TcpSocket2 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
+    ns3TcpSocket3 = Socket::CreateSocket (nodes.Get (1), TcpSocketFactory::GetTypeId ());
+  }
+  else if (part_num =="2"){
+    TypeId tid = TypeId::LookupByName ("ns3::TcpNewReno");
+    Config::Set ("/NodeList/*/$ns3::TcpL4Protocol/SocketType", TypeIdValue (tid));
+    ns3TcpSocket1 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
+    ns3TcpSocket2 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
+    tid = TypeId::LookupByName ("ns3::TcpNewRenoCSE");
+    Config::Set ("/NodeList/*/$ns3::TcpL4Protocol/SocketType", TypeIdValue (tid));
+    ns3TcpSocket3 = Socket::CreateSocket (nodes.Get (1), TcpSocketFactory::GetTypeId ());
+  }
+  else{
+    TypeId tid = TypeId::LookupByName ("ns3::TcpNewRenoCSE");
+    Config::Set ("/NodeList/*/$ns3::TcpL4Protocol/SocketType", TypeIdValue (tid));
+    ns3TcpSocket1 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
+    ns3TcpSocket2 = Socket::CreateSocket (nodes.Get (0), TcpSocketFactory::GetTypeId ());
+    ns3TcpSocket3 = Socket::CreateSocket (nodes.Get (1), TcpSocketFactory::GetTypeId ());
+  }
+
+  int PACKET_SIZE = 3000;
+  int NUM_PACKETS = INT32_MAX;
+  string APPLICATION_DATA_RATE = "1.5Mbps";
 
   Ptr<MyApp> app1 = CreateObject<MyApp> ();
   app1->Setup (ns3TcpSocket1, sinkAddress1, PACKET_SIZE, NUM_PACKETS, DataRate (APPLICATION_DATA_RATE));
   nodes.Get (0)->AddApplication (app1);
-  app1->SetStartTime (Seconds (START_TIME));
-  app1->SetStopTime (Seconds (END_TIME));
+  app1->SetStartTime (Seconds (1));
+  app1->SetStopTime (Seconds (20));
 
   Ptr<MyApp> app2 = CreateObject<MyApp> ();
   app2->Setup (ns3TcpSocket2, sinkAddress2, PACKET_SIZE, NUM_PACKETS, DataRate (APPLICATION_DATA_RATE));
   nodes.Get (0)->AddApplication (app2);
-  app2->SetStartTime (Seconds (START_TIME));
-  app2->SetStopTime (Seconds (END_TIME));
+  app2->SetStartTime (Seconds (5));
+  app2->SetStopTime (Seconds (25));
 
   Ptr<MyApp> app3 = CreateObject<MyApp> ();
   app3->Setup (ns3TcpSocket3, sinkAddress3, PACKET_SIZE, NUM_PACKETS, DataRate (APPLICATION_DATA_RATE));
   nodes.Get (1)->AddApplication (app3);
-  app3->SetStartTime (Seconds (START_TIME));
-  app3->SetStopTime (Seconds (END_TIME));
+  app3->SetStartTime (Seconds (15));
+  app3->SetStopTime (Seconds (30));
 
   AsciiTraceHelper asciiTraceHelper1;
   Ptr<OutputStreamWrapper> stream1 = asciiTraceHelper1.CreateFileStream ("config_"+part_num+"_connection_1"+".cwnd");
-  ns3TcpSocket1->TraceConnectWithoutContext ("CongestionWindow1", MakeBoundCallback (&CwndChange, stream1));
+  ns3TcpSocket1->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream1));
 
-  AsciiTraceHelper asciiTraceHelper2;
-  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper2.CreateFileStream ("config_"+part_num+"_connection_2"+".cwnd");
-  ns3TcpSocket2->TraceConnectWithoutContext ("CongestionWindow2", MakeBoundCallback (&CwndChange, stream2));
+  // AsciiTraceHelper asciiTraceHelper2;
+  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper1.CreateFileStream ("config_"+part_num+"_connection_2"+".cwnd");
+  ns3TcpSocket2->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream2));
 
-  AsciiTraceHelper asciiTraceHelper3;
-  Ptr<OutputStreamWrapper> stream3 = asciiTraceHelper3.CreateFileStream ("config_"+part_num+"_connection_3"+".cwnd");
-  ns3TcpSocket3->TraceConnectWithoutContext ("CongestionWindow3", MakeBoundCallback (&CwndChange, stream3));
+  // AsciiTraceHelper asciiTraceHelper3;
+  Ptr<OutputStreamWrapper> stream3 = asciiTraceHelper1.CreateFileStream ("config_"+part_num+"_connection_3"+".cwnd");
+  ns3TcpSocket3->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream3));
 
-  // PcapHelper pcapHelper;
-  // Ptr<PcapFileWrapper> file = pcapHelper.CreateFile ("sixth.pcap", std::ios::out, PcapHelper::DLT_PPP);
-  // devices.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeBoundCallback (&RxDrop, file));
+  PcapHelper pcapHelper1;
+  Ptr<PcapFileWrapper> file1 = pcapHelper1.CreateFile ("sixth1.pcap", std::ios::out, PcapHelper::DLT_PPP);
+  devices1.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeBoundCallback (&RxDrop, file1));
+
+  PcapHelper pcapHelper2;
+  Ptr<PcapFileWrapper> file2 = pcapHelper2.CreateFile ("sixth2.pcap", std::ios::out, PcapHelper::DLT_PPP);
+  devices2.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeBoundCallback (&RxDrop, file2));
 
   Simulator::Stop (Seconds (END_TIME));
   Simulator::Run ();
   Simulator::Destroy ();
 
-  // write_packets_dropped(part_num, value);
+  // write_packets_dropped(part_num);
 
   return 0;
 }
