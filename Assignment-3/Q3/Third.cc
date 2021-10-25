@@ -11,6 +11,10 @@ using namespace std;
 int packets_dropped=0;
 
 #define ERROR 0.00001
+#define END_TIME 30
+#define APPLICATION_DATA_RATE "1.5Mbps"
+#define NUM_PACKETS INT32_MAX
+#define PACKET_SIZE 3000
 
 NS_LOG_COMPONENT_DEFINE ("AayushScriptExample");
 
@@ -183,8 +187,8 @@ void
 write_packets_dropped(string part_num)
 {
   ofstream myfile;
-  myfile.open ( part_num+"_dropped.txt");
-  myfile << part_num <<"\n";
+  myfile.open ("config_"+ part_num+"_dropped.txt");
+  myfile << "config: "<< part_num <<"\n";
   myfile << packets_dropped <<"\n";
   myfile.close();
 }
@@ -231,7 +235,6 @@ main (int argc, char *argv[])
   address2.SetBase ("10.1.2.0", "255.255.255.252");
   Ipv4InterfaceContainer interfaces2 = address2.Assign (devices2);
 
-  int END_TIME = 30;
   uint16_t sinkPort1 = 8080;
   Address sinkAddress1 (InetSocketAddress (interfaces1.GetAddress (1), sinkPort1));
   PacketSinkHelper packetSinkHelper1 ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort1));
@@ -278,10 +281,6 @@ main (int argc, char *argv[])
     ns3TcpSocket3 = Socket::CreateSocket (nodes.Get (1), TcpSocketFactory::GetTypeId ());
   }
 
-  int PACKET_SIZE = 3000;
-  int NUM_PACKETS = INT32_MAX;
-  string APPLICATION_DATA_RATE = "1.5Mbps";
-
   Ptr<MyApp> app1 = CreateObject<MyApp> ();
   app1->Setup (ns3TcpSocket1, sinkAddress1, PACKET_SIZE, NUM_PACKETS, DataRate (APPLICATION_DATA_RATE));
   nodes.Get (0)->AddApplication (app1);
@@ -324,7 +323,7 @@ main (int argc, char *argv[])
   Simulator::Run ();
   Simulator::Destroy ();
 
-  // write_packets_dropped(part_num);
+  write_packets_dropped(part_num);
 
   return 0;
 }
