@@ -16,7 +16,7 @@ for FILE_NAME in onlyfiles:
 
     for t in A:
         time.append(t[0])
-        size.append(int(t[1]))
+        size.append(int(t[2]))
 
     plt.plot(time, size)
     plt.xlabel("Time (in s)")
