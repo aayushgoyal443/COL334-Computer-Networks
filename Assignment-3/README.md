@@ -53,7 +53,7 @@ Here <part_num> is:
 ```sh 
 ./waf configure --enable-example
 ```
-6. Now to run the code, give the following command
+6. Now to run the code, copy the file "Third.cc" into "sizth.cc" as done in the previous parts give the following command
 ```sh
 ./waf --run "examples/tutorial/sixth <config_num>"
 ```
