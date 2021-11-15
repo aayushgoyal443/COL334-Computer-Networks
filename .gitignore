@@ -5,3 +5,8 @@ Assignment-2/__pycache__/client.cpython-38.pyc
 **/report.*
 !**/report.pdf
 !**/report.tex
+*.mp4
+*.mov
+*.mkv
+*.pptx
+*.ppt
